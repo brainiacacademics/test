@@ -1,34 +1,1167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 
 <head>
+  <script>
+    document.addEventListener("contextmenu", (event) => event.preventDefault());
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && ["u", "s", "i", "j"].includes(event.key.toLowerCase()) ||
+        event.key === "F12") {
+        event.preventDefault();
+      }
+    });
+  </script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Display Webpage</title>
+  <title>Login & Online Exam</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
     body {
+      font-family: "Hind Siliguri", sans-serif;
       margin: 0;
       padding: 0;
-      height: 100vh;
+      background-color: #f4f4f4;
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: #f0f0f0;
+      height: 100vh;
     }
 
-    iframe {
+    .login-container {
+      background-color: white;
+      padding: 50px;
+      border-radius: 0px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      width: 300px;
+    }
+
+    h2 {
+      color: #1b0b54;
+    }
+
+    input {
+      font-family: "Hind Siliguri", sans-serif;
       width: 100%;
-      height: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      font-family: "Hind Siliguri", sans-serif;
+      padding: 10px;
+      background-color: #1b0b54;
+      color: white;
       border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #1b0b54;
+    }
+
+    .error {
+      font-family: "Hind Siliguri", sans-serif;
+      color: #ff0800;
+      margin-top: 10px;
+    }
+
+    .container {
+      font-family: "Hind Siliguri", sans-serif;
+      width: 100%;
+      margin: auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      min-height: 80vh;
+    }
+
+    .exam-content {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #1b0b54;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #timer {
+      font-size: 20px;
+      color: #1b0b54;
+      margin-bottom: 5px;
+      font-weight: normal;
+      text-align: center;
+    }
+
+    #exam-info {
+      font-size: 16px;
+      color: black;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #exam {
+      width: 100%;
+    }
+
+    .chart-container {
+      width: 200px;
+      height: 200px;
+      margin: 10px auto;
+      background-color: #f9f9f9;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+      padding: 10px;
+    }
+
+    .chart-container.visible {
+      display: block;
+    }
+
+    .question-container {
+      text-align: left;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .question-container.visible {
+      display: block;
+    }
+
+    .question-label {
+      font-weight: bold;
+    }
+
+    .option {
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    .circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #1b0b54;
+      margin-right: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #1b0b54;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .selected .circle {
+      background-color: #1b0b54;
+      color: white;
+    }
+
+    .correct-text {
+      color: green !important;
+    }
+
+    .incorrect-text {
+      color: #ff0800 !important;
+    }
+
+    .unattempted-text {
+      color: orange !important;
+    }
+
+    #submitBtn {
+      padding: 15px 30px;
+      background-color: #1b0b54;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 10px;
+      margin-top: 20px;
+      width: 200px;
+      transition: background-color 0.3s ease;
+    }
+
+    #submitBtn:hover {
+      background-color: #1b0b54;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      width: 300px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+      z-index: 1000;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+
+    .popup.slide-out {
+      transform: translate(-50%, -100%);
+      opacity: 0;
+    }
+
+    .popup-header {
+      background-color: #1b0b54;
+      color: white;
+      padding: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .popup-body {
+      padding: 15px;
+    }
+
+    .popup-body p {
+      margin: 10px 0;
+    }
+
+    .confirm-btn {
+      background-color: #34c759;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 5px;
+      margin: 5px;
+    }
+
+    .confirm-btn:hover {
+      background-color: #34c759;
+    }
+
+    .cancel-btn {
+      background-color: #ff3b30;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 5px;
+      margin: 5px;
+    }
+
+    .cancel-btn:hover {
+      background-color: #e02b21;
+    }
+
+    .explanation-dropdown {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .explanation-dropdown.visible {
+      display: block;
+    }
+
+    .explanation-btn {
+      background-color: #1b0b54;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: "Hind Siliguri", sans-serif;
+      width: 40%;
+      text-align: left;
+      position: relative;
+    }
+
+    .explanation-btn:hover {
+      background-color: #1b0b54;
+    }
+
+    .explanation-btn::after {
+      content: '▼';
+      position: absolute;
+      right: 10px;
+      font-size: 12px;
+    }
+
+    .explanation-btn.active::after {
+      content: '▲';
+    }
+
+    .explanation-content {
+      display: none;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      color: #000000;
+      text-align: left;
+      max-height: 450px;
+      overflow-y: auto;
+      margin-top: 5px;
+    }
+
+    .explanation-content.visible {
+      display: block;
+    }
+
+    .explanation-content p {
+      margin: 0 0 10px 0;
+    }
+
+    .explanation-content ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .explanation-content li {
+      margin-bottom: 5px;
+    }
+
+    .explanation-content strong {
+      color: #1b0b54;
+    }
+
+    .explanation-label {
+      font-weight: bold;
+      color: #1b0b54;
+      margin-bottom: 10px;
+      display: block;
     }
   </style>
 </head>
 
 <body>
-  <iframe id="myIframe" title="Webpage Display"></iframe>
+
+  <div class="login-container"
+    style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center; width: 300px;">
+    <h1>তথ্য দাও</h1>
+    <input type="text" id="userID" placeholder="রোল নাম্বার" required
+      style="width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+    <input type="text" id="password" placeholder="সিরিয়াল নাম্বার" required
+      style="width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+    <button id="loginBtn"
+      style="padding: 15px 30px; background-color: #1b0b54; color: white; border: none; cursor: pointer; font-size: 18px; font-weight: bold; border-radius: 5px; margin-top: 20px; width: 50%; transition: background-color 0.3s ease;"
+      onmouseover="this.style.backgroundColor='#1b0b54'" onmouseout="this.style.backgroundColor='#1b0b54'">শুরু করো
+    </button>
+    <p class="error" id="errorMessage"></p>
+  </div>
+
+  <div class="container" style="display: none;" id="examContainer">
+    <div class="exam-content">
+      <h1>বায়োলজি এক্স্যাম</h1>
+      <div id="timer">৬০ মিনিট ০ সেকেন্ড</div>
+      <div id="exam-info">পূর্ণ নম্বরঃ ১০০ </div>
+      <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+      </div>
+      <div id="exam">
+        <!-- Questions will be generated dynamically -->
+      </div>
+      <button id="submitBtn">সাবমিট</button>
+    </div>
+  </div>
+
+  <div class="popup" id="scorePopup">
+    <div class="popup-header">তোমার স্কোর</div>
+    <div class="popup-body">
+      <p><strong>রোল নাম্বার:</strong> <span id="rollNumber"></span></p>
+      <p><strong>মোট প্রশ্ন:</strong> <span id="totalQuestions"></span></p>
+      <p><strong>উত্তর দিয়েছো:</strong> <span style="color: #000000;" id="answered"></span></p>
+      <p><strong>সঠিক উত্তর:</strong> <span style="color: #0ab853;" id="correctAnswers"></span></p>
+      <p><strong>ভুল উত্তর:</strong> <span style="color: #f81010;" id="wrongAnswers"></span></p>
+      <p><strong>অনুত্তরিত:</strong> <span id="unanswered"></span></p>
+      <p><strong>তোমার চূড়ান্ত স্কোর:</strong></p>
+      <h2 style="color: #1b0b54;"><span id="finalScore"></span></h2>
+      <form id="scoreForm" action="https://formspree.io/f/mblodpag" method="POST">
+        <input type="hidden" name="userID" id="formUserID">
+        <input type="hidden" name="finalScore" id="formFinalScore">
+        <input type="hidden" name="correctAnswers" id="formCorrectAnswers">
+        <input type="hidden" name="wrongAnswers" id="formWrongAnswers">
+        <input type="hidden" name="unanswered" id="formUnanswered">
+        <button type="submit" class="confirm-btn" style="background-color: #1b0b54;"><b>ওকে</b></button>
+      </form>
+    </div>
+  </div>
+
+  <div class="popup" id="confirmPopup">
+    <div class="popup-header">কনফার্ম করো</div>
+    <div class="popup-body">
+      <p>ভালো করে দেখে নাও! <br>
+        পরীক্ষা শেষ করতে চাও তো? </p>
+      <button class="confirm-btn" onclick="confirmSubmit()"><b>হ্যাঁ</b></button>
+      <button class="cancel-btn" onclick="cancelSubmit()"><b>না</b></button>
+    </div>
+  </div>
+
   <script>
-    document.getElementById('myIframe').src = atob('aHR0cHM6Ly9icmFpbmlhY2FjYWRlbWljcy5naXRodWIuaW8vaG9tZS8=');
+    const users = [
+      { id: "7392041", pass: "835172" },
+      { id: "arafat", pass: "bodi" },
+      { id: "ullas", pass: "ullas" }
+    ];
+
+    let chartInstance = null;
+
+    // Initialize login event listener
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM fully loaded");
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn) {
+        console.log("Login button found");
+        loginBtn.addEventListener("click", validateLogin);
+      } else {
+        console.error("Login button not found");
+      }
+    });
+
+    function validateLogin() {
+      console.log("validateLogin function called");
+      const userID = document.getElementById("userID").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMessage = document.getElementById("errorMessage");
+      const loginContainer = document.querySelector(".login-container");
+      const examContainer = document.getElementById("examContainer");
+
+      // Check for empty fields
+      if (!userID || !password) {
+        errorMessage.innerText = "রোল নাম্বার এবং সিরিয়াল নাম্বার পূরণ করুন!";
+        console.log("Empty fields: userID =", userID, "password =", password);
+        return;
+      }
+
+      // Check credentials (case-insensitive for userID)
+      const isValid = users.some(user =>
+        user.id.toLowerCase() === userID.toLowerCase() && user.pass === password
+      );
+      console.log("Credentials valid:", isValid, "for userID:", userID);
+
+      if (isValid) {
+        console.log("Login successful for userID:", userID);
+        try {
+          sessionStorage.setItem("isLoggedIn", "true");
+          sessionStorage.setItem("userID", userID);
+          console.log("Session storage set: isLoggedIn = true, userID =", userID);
+        } catch (e) {
+          console.error("Session storage error:", e);
+        }
+
+        // Hide login and show exam
+        loginContainer.style.display = "none";
+        examContainer.style.display = "block";
+        errorMessage.innerText = "";
+
+        // Start exam
+        startTimer();
+        generateQuestions();
+      } else {
+        errorMessage.innerText = "ভুল রোল নাম্বার বা সিরিয়াল নাম্বার!";
+        console.log("Login failed for userID:", userID);
+      }
+
+      // Test mode: Uncomment to bypass login for debugging
+      /*
+      console.log("Bypassing login for testing");
+      sessionStorage.setItem("isLoggedIn", "true");
+      sessionStorage.setItem("userID", "testUser");
+      loginContainer.style.display = "none";
+      examContainer.style.display = "block";
+      errorMessage.innerText = "";
+      startTimer();
+      generateQuestions();
+      */
+    }
+
+    let timeLeft = 3600;
+    const timerElement = document.getElementById("timer");
+    let timerInterval;
+
+    function updateTimer() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerElement.innerText = `${toBengaliNumber(minutes)} মিনিট ${toBengaliNumber(seconds)} সেকেন্ড`;
+
+      if (timeLeft > 0) {
+        timeLeft--;
+      } else {
+        stopTimer();
+        showConfirmPopup();
+      }
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function toBengaliNumber(num) {
+      const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      let numStr = num.toString();
+
+      let isNegative = num < 0;
+      if (isNegative) {
+        numStr = numStr.substring(1);
+      }
+
+      if (numStr.includes('.')) {
+        let [integerPart, decimalPart] = numStr.split('.');
+        let integerBengali = integerPart.split('').map(digit => bengaliDigits[parseInt(digit)]).join('');
+        let decimalBengali = decimalPart.split('').map(digit => bengaliDigits[parseInt(digit)]).join('');
+        return (isNegative ? '−' : '') + integerBengali + '.' + decimalBengali;
+      } else {
+        let integerBengali = numStr.split('').map(digit => bengaliDigits[parseInt(digit)]).join('');
+        return (isNegative ? '−' : '') + integerBengali;
+      }
+    }
+
+    const questions = [
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 1,
+        "question": "বাংলাদেশের পার্বত্য চট্টগ্রামে কতটি জেলা আছে?",
+        "options": {
+          "A": "৯ টি",
+          "B": "৫ টি",
+          "C": "৭ টি",
+          "D": "৩ টি"
+        },
+        "correct": "D",
+        "explanation": `
+      <p>বাংলাদেশের পার্বত্য চট্টগ্রামে <strong>৩টি জেলা</strong> রয়েছে।</p>
+      <ul>
+        <li><strong>A. ৯ টি:</strong> ভুল। পার্বত্য চট্টগ্রামে ৯টি জেলা নেই, এটি অনেক বেশি সংখ্যা।</li>
+        <li><strong>B. ৫ টি:</strong> ভুল। ৫টি জেলাও সঠিক নয়, এটি প্রকৃত সংখ্যার চেয়ে বেশি।</li>
+        <li><strong>C. ৭ টি:</strong> ভুল। ৭টি জেলার তথ্য পার্বত্য চট্টগ্রামের জন্য প্রযোজ্য নয়।</li>
+        <li><strong>D. ৩ টি:</strong> সঠিক। পার্বত্য চট্টগ্রামে তিনটি জেলা রয়েছে: রাঙামাটি, খাগড়াছড়ি, এবং বান্দরবান।</li>
+      </ul>
+    `
+      },
+      {
+        "id": 2,
+        "question": "বাংলাদেশের কোন বিভাগের সাথে ভারতের কোন সীমান্ত সংযোগ নেই?",
+        "options": {
+          "A": "কুড়িগ্রাম",
+          "B": "নীলফামারী",
+          "C": "বরিশাল",
+          "D": "চট্টগ্রাম"
+        },
+        "correct": "C",
+        "explanation": `
+      <p>বাংলাদেশের <strong>বরিশাল</strong> বিভাগের সাথে ভারতের কোনো সীমান্ত নেই।</p>
+      <ul>
+        <li><strong>A. কুড়িগ্রাম:</strong> ভুল। কুড়িগ্রাম রংপুর বিভাগে অবস্থিত এবং ভারতের সাথে সীমান্ত রয়েছে।</li>
+        <li><strong>B. নীলফামারী:</strong> ভুল। নীলফামারীও রংপুর বিভাগে এবং ভারতের সাথে সীমান্ত রয়েছে।</li>
+        <li><strong>C. বরিশাল:</strong> সঠিক। বরিশাল বিভাগ সমুদ্রের কাছাকাছি এবং ভারতের সাথে কোনো স্থল সীমান্ত নেই।</li>
+        <li><strong>D. চট্টগ্রাম:</strong> ভুল। চট্টগ্রাম বিভাগের ভারতের ত্রিপুরা ও মিজোরামের সাথে সীমান্ত রয়েছে।</li>
+      </ul>
+    `
+      }
+    ];
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generateQuestions() {
+      const examContainer = document.querySelector('#exam');
+      examContainer.innerHTML = '';
+      const shuffledQuestions = shuffleArray([...questions]).slice(0, 100);
+      shuffledQuestions.forEach((question, index) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.classList.add('question-container', 'visible');
+        questionDiv.setAttribute('data-question', question.id);
+        questionDiv.setAttribute('data-correct', question.correct);
+
+        let optionsHTML = '';
+        for (let option in question.options) {
+          optionsHTML += `
+            <label class="option" data-option="${option}">
+              <div class="circle">${option}</div>
+              <span class="option-text">${question.options[option]}</span>
+            </label>
+          `;
+        }
+
+        const explanationHTML = question.explanation
+          ? `<div class="explanation-dropdown">
+               <button class="explanation-btn">ব্যাখ্যা দেখো</button>
+               <div class="explanation-content">
+                 <div class="explanation-label">ব্যাখ্যা:</div>
+                 ${question.explanation}
+               </div>
+             </div>`
+          : '';
+
+        questionDiv.innerHTML = `
+          <p class="question-label">${index + 1}. ${question.question}</p>
+          <div class="options">
+            ${optionsHTML}
+          </div>
+          ${explanationHTML}
+        `;
+        examContainer.appendChild(questionDiv);
+      });
+
+      document.querySelectorAll('.option').forEach(option => {
+        option.addEventListener('click', function () {
+          let parent = this.closest('.question-container');
+          parent.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+          this.classList.add('selected');
+        });
+      });
+
+      document.querySelectorAll('.explanation-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const content = this.nextElementSibling;
+          content.classList.toggle('visible');
+          this.classList.toggle('active');
+        });
+      });
+    }
+
+    function initializeChart() {
+      const ctx = document.getElementById('scoreChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['ঠিক উত্তর', 'ভুল উত্তর', 'অনুত্তরিত'],
+          datasets: [{
+            data: [0, 0, 0],
+            backgroundColor: ['#34c759', '#ff3b30', '#007aff'],
+            borderColor: '#fff',
+            borderWidth: 2,
+            hoverOffset: 10,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '10%',
+          layout: {
+            padding: 10
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: {
+                  family: '"Hind Siliguri", sans-serif',
+                  size: 13,
+                  weight: 'bold'
+                },
+                color: '#333',
+                padding: 12,
+                boxWidth: 14,
+                generateLabels: (chart) => {
+                  const data = chart.data;
+                  return data.labels.map((label, i) => ({
+                    text: label,
+                    font: {
+                      family: '"Hind Siliguri", sans-serif'
+                    },
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    hidden: !chart.getDataVisibility(i),
+                    index: i
+                  }));
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              cornerRadius: 6,
+              titleFont: {
+                family: '"Hind Siliguri", sans-serif',
+                size: 14,
+                weight: 'bold'
+              },
+              bodyFont: {
+                family: '"Hind Siliguri", sans-serif',
+                size: 13
+              },
+              padding: 10,
+              boxPadding: 5
+            }
+          },
+          animation: {
+            animateScale: true,
+            animateRotate: true,
+            duration: 1000,
+            easing: 'easeOutQuart'
+          },
+          elements: {
+            arc: {
+              borderRadius: 8
+            }
+          },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const filter = ['correct', 'wrong', 'unanswered'][index];
+              filterQuestions(filter);
+            } else {
+              filterQuestions('all');
+            }
+          }
+        }
+      });
+    }
+
+    function filterQuestions(type) {
+      document.querySelectorAll('.question-container').forEach(question => {
+        const status = question.getAttribute('data-status');
+        if (type === 'all' || status === type) {
+          question.classList.add('visible');
+        } else {
+          question.classList.remove('visible');
+        }
+      });
+    }
+
+    function showConfirmPopup() {
+      document.getElementById("confirmPopup").style.display = "block";
+    }
+
+    function confirmSubmit() {
+      document.getElementById("confirmPopup").style.display = "none";
+      stopTimer();
+      let score = 0, total = questions.length, answered = 0, correct = 0, wrong = 0, unanswered = 0;
+
+      document.querySelectorAll('.question-container').forEach((question, index) => {
+        let correctAnswer = question.getAttribute('data-correct');
+        let selectedOption = question.querySelector('.option.selected');
+
+        if (selectedOption) {
+          answered++;
+          let chosenAnswer = selectedOption.getAttribute('data-option');
+          if (chosenAnswer === correctAnswer) {
+            selectedOption.querySelector('.option-text').classList.add('correct-text');
+            score += 1;
+            correct++;
+            question.setAttribute('data-status', 'correct');
+          } else {
+            selectedOption.querySelector('.option-text').classList.add('incorrect-text');
+            question.querySelector(`[data-option="${correctAnswer}"] .option-text`).classList.add('correct-text');
+            score -= 0.25;
+            wrong++;
+            question.setAttribute('data-status', 'wrong');
+          }
+        } else {
+          question.querySelector(`[data-option="${correctAnswer}"] .option-text`).classList.add('unattempted-text');
+          unanswered++;
+          question.setAttribute('data-status', 'unanswered');
+        }
+        question.classList.add('visible');
+
+        const explanationDropdown = question.querySelector('.explanation-dropdown');
+        if (explanationDropdown) {
+          explanationDropdown.classList.add('visible');
+        }
+      });
+
+      const chartContainer = document.querySelector('.chart-container');
+      chartContainer.classList.add('visible');
+      if (!chartInstance) {
+        initializeChart();
+      }
+      chartInstance.data.datasets[0].data = [correct, wrong, unanswered];
+      chartInstance.update();
+
+      const userID = sessionStorage.getItem("userID");
+      document.getElementById("rollNumber").innerText = toBengaliNumber(userID);
+      document.getElementById("totalQuestions").innerText = toBengaliNumber(total);
+      document.getElementById("answered").innerText = toBengaliNumber(answered);
+      document.getElementById("correctAnswers").innerText = toBengaliNumber(correct);
+      document.getElementById("wrongAnswers").innerText = toBengaliNumber(wrong);
+      document.getElementById("unanswered").innerText = toBengaliNumber(unanswered);
+      document.getElementById("finalScore").innerText = toBengaliNumber(score.toFixed(2));
+
+      document.getElementById("formUserID").value = userID;
+      document.getElementById("formFinalScore").value = score.toFixed(2);
+      document.getElementById("formCorrectAnswers").value = correct;
+      document.getElementById("formWrongAnswers").value = wrong;
+      document.getElementById("formUnanswered").value = unanswered;
+
+      document.getElementById("submitBtn").style.display = "none";
+
+      // Show score popup immediately
+      document.getElementById("scorePopup").style.display = "block";
+
+      // Submit form to Formspree in the background
+      const form = document.getElementById("scoreForm");
+      fetch(form.action, {
+        method: "POST",
+        body: new FormData(form),
+        headers: {
+          "Accept": "application/json"
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            console.log("Form submitted successfully");
+            form.reset();
+          } else {
+            console.error("Form submission failed:", response.statusText);
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+        });
+    }
+
+    function cancelSubmit() {
+      document.getElementById("confirmPopup").style.display = "none";
+    }
+
+    document.getElementById("submitBtn").addEventListener("click", function () {
+      showConfirmPopup();
+    });
+
+    function closePopup() {
+      const scorePopup = document.getElementById("scorePopup");
+      scorePopup.classList.add("slide-out");
+      setTimeout(() => {
+        scorePopup.style.display = "none";
+        scorePopup.classList.remove("slide-out");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 500);
+    }
+
+    // Fix the OK button to close popup and scroll to top
+    document.getElementById("scoreForm").addEventListener("submit", function (event) {
+      event.preventDefault(); // Prevent default form submission
+      closePopup(); // Close popup and scroll to top
+    });
   </script>
+
 </body>
 
 </html>
