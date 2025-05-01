@@ -27,10 +27,7 @@
 <body>
   <iframe id="myIframe" title="Webpage Display"></iframe>
   <script>
-
-    const encodedUrl = "aHR0cHM6Ly9icmFpbmlhY2FjYWRlbWljcy5naXRodWIuaW8vaG9tZS8=";
-    const decodedUrl = atob(encodedUrl);
-    document.getElementById("myIframe").src = decodedUrl;
+    document.getElementById('myIframe').src = atob('aHR0cHM6Ly9icmFpbmlhY2FjYWRlbWljcy5naXRodWIuaW8vaG9tZS8=');
   </script>
 </body>
 
